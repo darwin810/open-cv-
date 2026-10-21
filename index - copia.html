@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ghost Body — Fantasma de Partículas Interactivo</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ==================== ESCENARIO PRINCIPAL ==================== -->
+  <main id="stage">
+    <video id="input-video" playsinline autoplay muted></video>
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="main-canvas"></canvas>
+    <canvas id="calib-canvas"></canvas>
+  </main>
+
+  <!-- ==================== TELEMETRÍA (HUD) ==================== -->
+  <section id="telemetry" aria-label="Telemetría del sistema">
+    <div class="telemetry-row">
+      <span class="telemetry-label">Estado</span>
+      <span id="tm-state" class="telemetry-value state-off">CÁMARA APAGADA</span>
+    </div>
+    <div class="telemetry-row">
+      <span class="telemetry-label">Ojos</span>
+      <span id="tm-eyes" class="telemetry-value">👀 Abiertos</span>
+    </div>
+    <div class="telemetry-row">
+      <span class="telemetry-label">FPS</span>
+      <span id="tm-fps" class="telemetry-value">0</span>
+    </div>
+    <div class="telemetry-row">
+      <span class="telemetry-label">Latencia Pose</span>
+      <span id="tm-latency" class="telemetry-value">0 ms</span>
+    </div>
+    <div class="telemetry-row">
+      <span class="telemetry-label">Partículas activas</span>
+      <span id="tm-bubbles" class="telemetry-value">0</span>
+    </div>
+    <div class="telemetry-row">
+      <span class="telemetry-label">Landmarks</span>
+      <span id="tm-landmarks" class="telemetry-value">0 / 33</span>
+    </div>
+  </section>
+
+  <!-- ==================== PANEL LATERAL ==================== -->
+  <aside id="panel">
+    <header class="panel-header">
+      <h1>Spooky&nbsp;Ghost</h1>
+      <p class="panel-sub">Fantasma espectral de partículas físicas</p>
+    </header>
+
+    <section class="panel-group">
+      <h2>Cámara &amp; Escena</h2>
+      <div class="panel-buttons">
+        <button id="btn-camera" class="btn btn-primary">Iniciar cámara</button>
+        <button id="btn-regen" class="btn">Regenerar fantasma</button>
+      </div>
+      <div class="panel-buttons">
+        <button id="btn-calibrate" class="btn">Calibrar pared</button>
+        <button id="btn-toggle-bg" class="btn">Mostrar/ocultar fondo</button>
+      </div>
+      <div class="panel-buttons">
+        <button id="btn-toggle-eyes" class="btn">Cerrar / abrir ojos (Espacio)</button>
+      </div>
+    </section>
+
+    <section class="panel-group">
+      <h2>Población de Partículas</h2>
+      <label class="field">
+        <span>Cantidad de partículas <em id="val-count">1100</em></span>
+        <input type="range" id="ctl-count" min="400" max="2000" step="10" value="1100" />
+      </label>
+      <label class="field">
+        <span>Tamaño <em id="val-size">4.0</em></span>
+        <input type="range" id="ctl-size" min="1.5" max="9" step="0.1" value="4.0" />
+      </label>
+    </section>
+
+    <section class="panel-group">
+      <h2>Física Espectral</h2>
+      <label class="field">
+        <span>Ondulación de falda <em id="val-waviness">1.2</em></span>
+        <input type="range" id="ctl-waviness" min="0.2" max="2.5" step="0.05" value="1.2" />
+      </label>
+      <label class="field">
+        <span>Adhesión al cuerpo <em id="val-adhesion">0.85</em></span>
+        <input type="range" id="ctl-adhesion" min="0.1" max="1" step="0.01" value="0.85" />
+      </label>
+      <label class="field">
+        <span>Suavizado (anti-jitter) <em id="val-smooth">0.35</em></span>
+        <input type="range" id="ctl-smooth" min="0.05" max="0.95" step="0.01" value="0.35" />
+      </label>
+      <label class="field">
+        <span>Flotación / Brisa <em id="val-float">0.65</em></span>
+        <input type="range" id="ctl-float" min="0.1" max="1.5" step="0.01" value="0.65" />
+      </label>
+      <label class="field">
+        <span>Modo en espera (sin persona)</span>
+        <select id="ctl-distmode">
+          <option value="ghost_idle" selected>Fantasmita flotante (espera)</option>
+          <option value="text">Texto "SENATI"</option>
+          <option value="wander">Aleatorio (wander)</option>
+          <option value="cluster">Agrupado en orbe</option>
+          <option value="disperse">Disperso</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="panel-group">
+      <h2>Apariencia Espectral</h2>
+      <label class="field">
+        <span>Modo de color</span>
+        <select id="ctl-colormode">
+          <option value="blanco" selected>Blanco Espectral (Clásico)</option>
+          <option value="azul">Fuego Fatuo (Azul Cian)</option>
+          <option value="verde">Ectoplasma (Verde Neón)</option>
+          <option value="morado">Sombra Astral (Morado)</option>
+          <option value="rosa">Fantasma Kawaii (Rosa)</option>
+          <option value="dorado">Espíritu Dorado</option>
+          <option value="rojo">Furia Carmesí</option>
+          <option value="multicolor">Arcoíris Espectral</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </label>
+      <label class="field" id="field-custom-color" style="display:none">
+        <span>Color personalizado</span>
+        <input type="color" id="ctl-color" value="#eaf6ff" />
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-cloth" checked />
+        <span>Sábana de tela encima (con pliegues 3D)</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-bubblelook" checked />
+        <span>Gotas y perlas de burbuja (brillo y volumen)</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-showface" checked />
+        <span>Rostro y ojos del fantasma</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-trail" checked />
+        <span>Chispas y estela de ectoplasma</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-glow" checked />
+        <span>Resplandor espectral (Glow)</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-skeleton" />
+        <span>Mostrar esqueleto guía</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-mirror" checked />
+        <span>Espejar cámara</span>
+      </label>
+      <label class="field-inline">
+        <input type="checkbox" id="ctl-usecalib" />
+        <span>Usar calibración</span>
+      </label>
+    </section>
+
+    <footer class="panel-footer">
+      <p id="calib-hint" class="hint">Sin calibración guardada</p>
+    </footer>
+  </aside>
+
+  <!-- ==================== LIBRERÍAS (CDN, sin bundler) ==================== -->
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
